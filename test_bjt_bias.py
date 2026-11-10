@@ -120,5 +120,20 @@ class TestApproximateComparison(unittest.TestCase):
         self.assertIsNone(result["comparison"]["vce_diff_pct"])
 
 
+class TestEnglishMessages(unittest.TestCase):
+    def test_validation_message_is_english(self):
+        with self.assertRaises(ValueError) as context:
+            validate_inputs(0, 47000, 10000, 2200, 1000, 150, 0.7)
+        self.assertIn("greater than 0", str(context.exception))
+
+    def test_cutoff_warning_is_english(self):
+        result = calculate_dc_bias(**dict(DEFAULT, r2=1000))
+        self.assertIn("cutoff region", result["warnings"][0])
+
+    def test_approximation_reason_is_english(self):
+        result = calculate_dc_bias(**dict(DEFAULT, re=100))
+        self.assertIn("is not met", result["approximate"]["reason"])
+
+
 if __name__ == "__main__":
     unittest.main()

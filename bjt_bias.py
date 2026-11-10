@@ -9,13 +9,13 @@ def validate_inputs(
 ) -> None:
     """ตรวจสอบความถูกต้องของค่าอินพุตวงจร BJT Common-Emitter"""
     if vcc <= 0:
-        raise ValueError("แรงดัน V_CC ต้องมากกว่า 0")
+        raise ValueError("V_CC must be greater than 0")
     if r1 <= 0 or r2 <= 0 or rc <= 0 or re <= 0:
-        raise ValueError("ค่าความต้านทานต้องมากกว่า 0 โอห์ม")
+        raise ValueError("All resistance values must be greater than 0 Ω")
     if beta <= 0:
-        raise ValueError("ค่า β ต้องมากกว่า 0")
+        raise ValueError("β must be greater than 0")
     if vbe < 0 or vbe >= vcc:
-        raise ValueError("ค่า V_BE ต้องอยู่ระหว่าง 0 ถึง V_CC")
+        raise ValueError("V_BE must be between 0 and V_CC")
 
 
 def calculate_dc_bias(
@@ -50,13 +50,13 @@ def calculate_dc_bias(
         vb = vth
         vc = vcc
         vce = vcc
-        warnings.append("ทรานซิสเตอร์อยู่ในย่าน cutoff (V_TH < V_BE หรือ I_B ≤ 0)")
+        warnings.append("Transistor is in the cutoff region (V_TH < V_BE or I_B ≤ 0)")
     elif vce <= 0.2:
         region = "saturation"
         ic_sat = (vcc - 0.2) / (rc + re)
         warnings.append(
-            "ทรานซิสเตอร์อยู่ในย่าน saturation (V_CE ≤ 0.2 V) "
-            "— ค่า I_C จากแบบจำลองเชิงเส้นใช้ไม่ได้"
+            "Transistor is in the saturation region (V_CE ≤ 0.2 V) "
+            "— the linear I_C model no longer applies"
         )
     else:
         region = "active"
@@ -71,10 +71,10 @@ def calculate_dc_bias(
 
     if ratio < 1:
         applicable = False
-        reason = "ไม่เข้าเงื่อนไข βR_E ≥ 10R2"
+        reason = "Condition βR_E ≥ 10R2 is not met"
     elif approx_ve <= 0:
         applicable = False
-        reason = "V_E ≤ 0 (วงจรอยู่ใน cutoff) ใช้วิธี approximate ไม่ได้"
+        reason = "V_E ≤ 0 (circuit is in cutoff); the approximate method does not apply"
         approx_vb = approx_ve = approx_ie = None
         approx_ic = approx_vc = approx_vce = None
     else:

@@ -331,7 +331,7 @@ main {
   font-size: 0.88rem;
 }
 
-.circuit-card svg {
+.circuit-card > svg {
   display: block;
   width: 100%;
   max-width: 380px;

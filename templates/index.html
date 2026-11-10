@@ -207,6 +207,9 @@
             {% else %}
             <p>V<sub>CE</sub> ≤ 0.2 V — I<sub>C,sat</sub> = {{ "%.2f"|format(result.ic_sat * 1e3) }} mA</p>
             {% endif %}
+            {% for warning in result.warnings %}
+            <p class="warning">{{ warning }}</p>
+            {% endfor %}
           </div>
         </div>
         {% else %}

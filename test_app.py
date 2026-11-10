@@ -69,6 +69,11 @@ class TestApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("valid unit".encode(), response.data)
 
+    def test_status_box_shows_cutoff_warning(self):
+        response = self.client.post("/", data=dict(VALID_FORM, r2="1", r2_unit="kΩ"))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Transistor is in the cutoff region", response.data)
+
     def test_zero_vce_saturation_returns_page(self):
         form = dict(
             VALID_FORM, vcc="5", r1="1000", r1_unit="Ω",

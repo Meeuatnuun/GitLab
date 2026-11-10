@@ -177,3 +177,12 @@ th + th {
   margin: 0 0 0.9rem;
   color: var(--muted);
 }
+
+.error {
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--saturation);
+  background: #fdecea;
+  border-radius: 4px;
+  color: var(--saturation);
+}

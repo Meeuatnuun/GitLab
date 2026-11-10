@@ -13,6 +13,10 @@
     <p class="course">ENG29 2121 · คำนวณจุดทำงานกระแสตรง (Q-point)</p>
   </header>
 
+  {% if error %}
+  <p class="error" role="alert">{{ error }}</p>
+  {% endif %}
+
   <form method="post" action="/">
     <fieldset>
       <legend>ค่าพารามิเตอร์ของวงจร</legend>

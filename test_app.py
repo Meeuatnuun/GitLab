@@ -25,5 +25,17 @@ class TestApp(unittest.TestCase):
         self.assertIn(b"1.324", response.data)
 
 
+    def test_zero_resistance_shows_validation_error(self):
+        response = self.client.post("/", data=dict(VALID_FORM, r1="0"))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("มากกว่า 0".encode(), response.data)
+        self.assertNotIn(b"region-active", response.data)
+
+    def test_non_numeric_input_shows_parse_error(self):
+        response = self.client.post("/", data=dict(VALID_FORM, vcc="abc"))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("ตัวเลข".encode(), response.data)
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -37,9 +37,16 @@ def create_app() -> Flask:
 
     @app.post("/")
     def calculate():
-        values = parse_form(request.form)
-        result = calculate_dc_bias(**values)
-        return render_template("index.html", form=request.form, result=result, error=None)
+        try:
+            values = parse_form(request.form)
+            result = calculate_dc_bias(**values)
+        except ValueError as error:
+            return render_template(
+                "index.html", form=request.form, result=None, error=str(error)
+            )
+        return render_template(
+            "index.html", form=request.form, result=result, error=None
+        )
 
     return app
 

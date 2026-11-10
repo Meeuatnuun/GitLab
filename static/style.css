@@ -74,6 +74,11 @@ form,
   font-family: inherit;
 }
 
+.circuit svg .value {
+  fill: var(--muted);
+  font-size: 12px;
+}
+
 fieldset {
   border: none;
   margin: 0;

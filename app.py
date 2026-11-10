@@ -17,6 +17,17 @@ DEFAULTS = {
 }
 
 
+def format_resistance(value: str) -> str:
+    """แปลงค่าความต้านทานเป็นข้อความ เช่น 47000 -> 47 kΩ"""
+    try:
+        ohms = float(value)
+    except (TypeError, ValueError):
+        return str(value)
+    if ohms >= 1000:
+        return f"{ohms / 1000:g} kΩ"
+    return f"{ohms:g} Ω"
+
+
 def parse_form(form: Mapping[str, str]) -> dict[str, float]:
     """แปลงค่าจากฟอร์ม HTML เป็นตัวเลขสำหรับคำนวณ"""
     values: dict[str, float] = {}
@@ -30,6 +41,7 @@ def parse_form(form: Mapping[str, str]) -> dict[str, float]:
 
 def create_app() -> Flask:
     app = Flask(__name__)
+    app.add_template_filter(format_resistance, "resistance")
 
     @app.get("/")
     def index():

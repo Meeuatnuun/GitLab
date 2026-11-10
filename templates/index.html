@@ -56,9 +56,13 @@
       <g fill="#1f2933" font-size="14">
         <text x="215" y="32" text-anchor="middle">V_CC = {{ form.vcc }} V</text>
         <text x="62" y="104">R1</text>
+        <text x="96" y="122" text-anchor="end" class="value">{{ form.r1|resistance }}</text>
         <text x="62" y="274">R2</text>
+        <text x="96" y="292" text-anchor="end" class="value">{{ form.r2|resistance }}</text>
         <text x="245" y="104">R_C</text>
+        <text x="245" y="122" class="value">{{ form.rc|resistance }}</text>
         <text x="245" y="324">R_E</text>
+        <text x="245" y="342" class="value">{{ form.re|resistance }}</text>
         <text x="245" y="198">Q1</text>
         <text x="245" y="216">NPN</text>
         <text x="245" y="234">β = {{ form.beta }}</text>

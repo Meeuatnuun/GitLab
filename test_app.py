@@ -17,6 +17,12 @@ class TestApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("Q-point".encode(), response.data)
 
+    def test_index_shows_circuit_diagram(self):
+        response = self.client.get("/")
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"<svg", response.data)
+        self.assertIn("Voltage Divider Bias".encode(), response.data)
+
     def test_post_valid_input_shows_active_q_point(self):
         response = self.client.post("/", data=VALID_FORM)
         self.assertEqual(response.status_code, 200)

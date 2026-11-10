@@ -48,6 +48,32 @@ form,
   margin-bottom: 1.5rem;
 }
 
+.circuit {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.circuit h2 {
+  justify-content: center;
+  font-size: 1.1rem;
+  margin-bottom: 0.25rem;
+}
+
+.circuit svg {
+  display: block;
+  width: 100%;
+  max-width: 420px;
+  height: auto;
+  margin: 0 auto;
+}
+
+.circuit svg text {
+  font-family: inherit;
+}
+
 fieldset {
   border: none;
   margin: 0;

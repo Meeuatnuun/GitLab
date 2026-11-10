@@ -36,6 +36,15 @@ class TestApp(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertIn("ตัวเลข".encode(), response.data)
 
+    def test_zero_vce_saturation_returns_page(self):
+        form = dict(
+            VALID_FORM, vcc="5", r1="1000", r2="100", rc="105.5",
+            re="10", beta="200", vbe="0",
+        )
+        response = self.client.post("/", data=form)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn(b"Saturation", response.data)
+
 
 if __name__ == "__main__":
     unittest.main()

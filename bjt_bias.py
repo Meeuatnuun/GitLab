@@ -81,7 +81,7 @@ def calculate_dc_bias(
         applicable = True
         reason = ""
 
-    if applicable and ic > 0:
+    if applicable and ic > 0 and region == "active":
         ic_diff_pct = abs(approx_ic - ic) / ic * 100
         vce_diff_pct = abs(approx_vce - vce) / abs(vce) * 100
     else:

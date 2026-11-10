@@ -106,6 +106,19 @@ class TestApproximateComparison(unittest.TestCase):
         self.assertIsNone(approx["ve"])
         self.assertIsNone(result["comparison"]["ic_diff_pct"])
 
+    def test_saturation_comparison_is_not_reported(self):
+        result = calculate_dc_bias(**dict(DEFAULT, rc=10000))
+        self.assertIsNone(result["comparison"]["ic_diff_pct"])
+        self.assertIsNone(result["comparison"]["vce_diff_pct"])
+
+    def test_zero_vce_saturation_does_not_divide_by_zero(self):
+        result = calculate_dc_bias(
+            vcc=5, r1=1000, r2=100, rc=105.5, re=10, beta=200, vbe=0
+        )
+        self.assertEqual(result["region"], "saturation")
+        self.assertAlmostEqual(result["exact"]["vce"], 0.0)
+        self.assertIsNone(result["comparison"]["vce_diff_pct"])
+
 
 if __name__ == "__main__":
     unittest.main()

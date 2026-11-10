@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>BJT Common-Emitter DC Bias — ENG29 2121</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<main>
+  <header>
+    <h1>วงจร BJT Common-Emitter DC Bias</h1>
+    <p class="course">ENG29 2121 · คำนวณจุดทำงานกระแสตรง (Q-point)</p>
+  </header>
+
+  <form method="post" action="/">
+    <fieldset>
+      <legend>ค่าพารามิเตอร์ของวงจร</legend>
+
+      <label>แรงดัน V_CC (V)
+        <input name="vcc" type="number" step="any" value="{{ form.vcc }}" required>
+      </label>
+      <label>ตัวต้านทาน R1 (Ω)
+        <input name="r1" type="number" step="any" value="{{ form.r1 }}" required>
+      </label>
+      <label>ตัวต้านทาน R2 (Ω)
+        <input name="r2" type="number" step="any" value="{{ form.r2 }}" required>
+      </label>
+      <label>ตัวต้านทาน R_C (Ω)
+        <input name="rc" type="number" step="any" value="{{ form.rc }}" required>
+      </label>
+      <label>ตัวต้านทาน R_E (Ω)
+        <input name="re" type="number" step="any" value="{{ form.re }}" required>
+      </label>
+      <label>อัตราขยายกระแส β
+        <input name="beta" type="number" step="any" value="{{ form.beta }}" required>
+      </label>
+      <label>แรงดัน V_BE (V)
+        <input name="vbe" type="number" step="any" value="{{ form.vbe }}" required>
+      </label>
+    </fieldset>
+
+    <button type="submit">คำนวณ</button>
+  </form>
+
+  {% if result %}
+  <section class="result">
+    <h2>
+      Q-point
+      <span class="badge region-{{ result.region }}">{{ result.region|capitalize }}</span>
+    </h2>
+
+    <table>
+      <caption>จุดทำงานกระแสตรง (วิธี exact)</caption>
+      <tbody>
+        <tr><th>I_B</th><td>{{ "%.3f"|format(result.exact.ib * 1000) }}</td><td>mA</td></tr>
+        <tr><th>I_C</th><td>{{ "%.3f"|format(result.exact.ic * 1000) }}</td><td>mA</td></tr>
+        <tr><th>I_E</th><td>{{ "%.3f"|format(result.exact.ie * 1000) }}</td><td>mA</td></tr>
+        <tr><th>V_BE</th><td>{{ "%.3f"|format(form.vbe|float) }}</td><td>V</td></tr>
+        <tr><th>V_B</th><td>{{ "%.3f"|format(result.exact.vb) }}</td><td>V</td></tr>
+        <tr><th>V_C</th><td>{{ "%.3f"|format(result.exact.vc) }}</td><td>V</td></tr>
+        <tr><th>V_E</th><td>{{ "%.3f"|format(result.exact.ve) }}</td><td>V</td></tr>
+        <tr><th>V_CE</th><td>{{ "%.3f"|format(result.exact.vce) }}</td><td>V</td></tr>
+      </tbody>
+    </table>
+
+    {% if result.ic_sat is not none %}
+    <p class="sat-current">
+      I_C,sat = {{ "%.3f"|format(result.ic_sat * 1000) }} mA
+    </p>
+    {% endif %}
+
+    {% if result.warnings %}
+    <ul class="warnings">
+      {% for warning in result.warnings %}
+      <li>{{ warning }}</li>
+      {% endfor %}
+    </ul>
+    {% endif %}
+  </section>
+
+  <section class="comparison">
+    <h3>เปรียบเทียบกับวิธี approximate</h3>
+    <p class="condition">
+      βR_E ≥ 10R2:
+      {% if result.approximate.ratio >= 1 %}ผ่าน{% else %}ไม่ผ่าน{% endif %}
+      (อัตราส่วน {{ "%.2f"|format(result.approximate.ratio) }})
+      {% if not result.approximate.applicable %}— {{ result.approximate.reason }}{% endif %}
+    </p>
+
+    <table>
+      <thead>
+        <tr><th>ปริมาณ</th><th>Exact</th><th>Approximate</th><th>ต่าง (%)</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>I_C (mA)</td>
+          <td>{{ "%.3f"|format(result.exact.ic * 1000) }}</td>
+          <td>{% if result.approximate.ic is not none %}{{ "%.3f"|format(result.approximate.ic * 1000) }}{% else %}N/A{% endif %}</td>
+          <td>{% if result.comparison.ic_diff_pct is not none %}{{ "%.2f"|format(result.comparison.ic_diff_pct) }}{% else %}N/A{% endif %}</td>
+        </tr>
+        <tr>
+          <td>V_CE (V)</td>
+          <td>{{ "%.3f"|format(result.exact.vce) }}</td>
+          <td>{% if result.approximate.vce is not none %}{{ "%.3f"|format(result.approximate.vce) }}{% else %}N/A{% endif %}</td>
+          <td>{% if result.comparison.vce_diff_pct is not none %}{{ "%.2f"|format(result.comparison.vce_diff_pct) }}{% else %}N/A{% endif %}</td>
+        </tr>
+      </tbody>
+    </table>
+  </section>
+  {% endif %}
+</main>
+</body>
+</html>

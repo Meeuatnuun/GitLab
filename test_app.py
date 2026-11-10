@@ -3,8 +3,10 @@ import unittest
 from app import create_app, format_resistance, parse_form
 
 VALID_FORM = {
-    "vcc": "12", "r1": "47000", "r2": "10000", "rc": "2200",
-    "re": "1000", "beta": "150", "vbe": "0.7",
+    "vcc": "12", "r1": "100", "r2": "22", "rc": "2.2",
+    "re": "1.0", "beta": "100", "vbe": "0.7",
+    "vcc_unit": "V", "r1_unit": "kΩ", "r2_unit": "kΩ",
+    "rc_unit": "kΩ", "re_unit": "kΩ", "vbe_unit": "V",
 }
 
 
@@ -12,53 +14,70 @@ class TestApp(unittest.TestCase):
     def setUp(self):
         self.client = create_app().test_client()
 
-    def test_get_index_shows_form(self):
+    def test_get_index_shows_dashboard(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, 200)
-        self.assertIn("Q-point".encode(), response.data)
+        for text in (
+            "Input Parameters",
+            "Circuit: Common-Emitter Amplifier",
+            "DC Bias Results",
+            "Calculate DC Bias",
+        ):
+            self.assertIn(text.encode(), response.data)
 
-    def test_index_shows_circuit_diagram(self):
+    def test_get_index_shows_default_results(self):
         response = self.client.get("/")
-        self.assertEqual(response.status_code, 200)
-        self.assertIn(b"<svg", response.data)
-        self.assertIn("Voltage Divider Bias".encode(), response.data)
+        self.assertIn(b"Active region", response.data)
+        self.assertIn(b"8.05", response.data)
+        self.assertIn(b"12.30", response.data)
 
     def test_diagram_shows_parameter_values(self):
         response = self.client.get("/")
-        self.assertIn("47 kΩ".encode(), response.data)
-        self.assertIn("2.2 kΩ".encode(), response.data)
+        for text in ("100 kΩ", "22 kΩ", "2.2 kΩ", "1.0 kΩ"):
+            self.assertIn(text.encode(), response.data)
 
     def test_diagram_updates_with_submitted_values(self):
-        response = self.client.post("/", data=dict(VALID_FORM, r1="22000"))
-        self.assertIn("22 kΩ".encode(), response.data)
+        form = dict(
+            VALID_FORM,
+            r1="47", r1_unit="kΩ",
+            r2="10", r2_unit="kΩ",
+        )
+        response = self.client.post("/", data=form)
+        self.assertIn("47 kΩ".encode(), response.data)
+        self.assertIn("10 kΩ".encode(), response.data)
 
     def test_post_valid_input_shows_active_q_point(self):
         response = self.client.post("/", data=VALID_FORM)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Active", response.data)
-        self.assertIn(b"7.755", response.data)
-        self.assertIn(b"1.324", response.data)
-
+        self.assertIn(b"Active region", response.data)
+        self.assertIn(b"1.23", response.data)
 
     def test_zero_resistance_shows_validation_error(self):
         response = self.client.post("/", data=dict(VALID_FORM, r1="0"))
         self.assertEqual(response.status_code, 200)
         self.assertIn("greater than 0".encode(), response.data)
-        self.assertNotIn(b"region-active", response.data)
+        self.assertNotIn(b"Active region", response.data)
+        self.assertIn(b"Input Parameters", response.data)
 
     def test_non_numeric_input_shows_parse_error(self):
         response = self.client.post("/", data=dict(VALID_FORM, vcc="abc"))
         self.assertEqual(response.status_code, 200)
         self.assertIn("numbers".encode(), response.data)
 
+    def test_invalid_unit_shows_error(self):
+        response = self.client.post("/", data=dict(VALID_FORM, r1_unit="MΩ"))
+        self.assertEqual(response.status_code, 200)
+        self.assertIn("valid unit".encode(), response.data)
+
     def test_zero_vce_saturation_returns_page(self):
         form = dict(
-            VALID_FORM, vcc="5", r1="1000", r2="100", rc="105.5",
-            re="10", beta="200", vbe="0",
+            VALID_FORM, vcc="5", r1="1000", r1_unit="Ω",
+            r2="100", r2_unit="Ω", rc="105.5", rc_unit="Ω",
+            re="10", re_unit="Ω", beta="200", vbe="0",
         )
         response = self.client.post("/", data=form)
         self.assertEqual(response.status_code, 200)
-        self.assertIn(b"Saturation", response.data)
+        self.assertIn(b"Saturation region", response.data)
 
 
 class TestFormatResistance(unittest.TestCase):

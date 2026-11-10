@@ -9,13 +9,13 @@ FIELDS = ("vcc", "r1", "r2", "rc", "re", "beta", "vbe")
 RESISTANCE_FIELDS = ("r1", "r2", "rc", "re")
 
 DEFAULTS = {
-    "vcc": "12",
-    "r1": "47000",
-    "r2": "10000",
-    "rc": "2200",
-    "re": "1000",
-    "beta": "150",
-    "vbe": "0.7",
+    "vcc": "12.0",
+    "r1": "100",
+    "r2": "22",
+    "rc": "2.2",
+    "re": "1.0",
+    "beta": "100",
+    "vbe": "0.70",
 }
 
 BASE_UNITS = {
@@ -28,7 +28,15 @@ BASE_UNITS = {
     "vbe": "V",
 }
 
-DEFAULT_UNITS = dict(BASE_UNITS)
+DEFAULT_UNITS = {
+    "vcc": "V",
+    "r1": "kΩ",
+    "r2": "kΩ",
+    "rc": "kΩ",
+    "re": "kΩ",
+    "beta": "–",
+    "vbe": "V",
+}
 
 DEFAULT_FORM = {
     **DEFAULTS,
@@ -80,8 +88,9 @@ def create_app() -> Flask:
 
     @app.get("/")
     def index():
+        result = calculate_dc_bias(**parse_form(DEFAULT_FORM))
         return render_template(
-            "index.html", form=DEFAULTS, units=DEFAULT_UNITS, result=None, error=None
+            "index.html", form=DEFAULTS, units=DEFAULT_UNITS, result=result, error=None
         )
 
     @app.post("/")

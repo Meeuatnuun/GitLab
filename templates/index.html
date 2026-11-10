@@ -1,175 +1,257 @@
 <!DOCTYPE html>
-<html lang="th">
+<html lang="en">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>BJT Common-Emitter DC Bias — ENG29 2121</title>
+  <title>Lab 02: BJT DC Bias Web App</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
 <main>
-  <header>
-    <h1>วงจร BJT Common-Emitter DC Bias</h1>
-    <p class="course">ENG29 2121 · คำนวณจุดทำงานกระแสตรง (Q-point)</p>
+  <header class="page-header">
+    <div class="brand">
+      <svg class="chip-icon" viewBox="0 0 48 48" aria-hidden="true">
+        <rect x="12" y="12" width="24" height="24" rx="4" fill="none" stroke="currentColor" stroke-width="2"/>
+        <path d="M18 12V6M24 12V6M30 12V6M18 36v6M24 36v6M30 36v6M12 18H6M12 24H6M12 30H6M36 18h6M36 24h6M36 30h6" stroke="currentColor" stroke-width="2"/>
+      </svg>
+      <div>
+        <h1>Lab 02: BJT DC Bias Web App</h1>
+        <p class="subtitle">ENG29 2121 – Common Emitter (Voltage Divider Bias)</p>
+      </div>
+    </div>
+    <div class="course-badge">
+      <svg class="code-icon" viewBox="0 0 24 24" aria-hidden="true">
+        <path d="M8 6 3 12l5 6M16 6l5 6-5 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+      </svg>
+      <span>Computer Programming for<br>Electrical Engineers</span>
+    </div>
   </header>
 
-  <section class="circuit">
-    <h2>วงจร Common-Emitter (Voltage Divider Bias)</h2>
-    <svg viewBox="0 0 360 400" role="img" aria-labelledby="circuit-title">
-      <title id="circuit-title">วงจร BJT Common-Emitter แบบ voltage divider bias</title>
-      <defs>
-        <g id="resistor">
-          <path d="M0,0 V8 L8,14 L-8,24 L8,34 L-8,44 L8,54 L-8,64 L0,70 V80" fill="none"/>
-        </g>
-        <g id="ground">
-          <path d="M-14,0 H14 M-9,6 H9 M-4,12 H4" fill="none"/>
-        </g>
-        <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
-                markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-          <path d="M0,0 L10,5 L0,10 z" fill="#1f2933"/>
-        </marker>
-      </defs>
-
-      <g stroke="#1f2933" stroke-width="2" fill="none"
-         stroke-linecap="round" stroke-linejoin="round">
-        <path d="M110,50 H215"/>
-        <path d="M110,50 V60"/>
-        <path d="M110,140 V230"/>
-        <path d="M110,210 H178"/>
-        <use href="#resistor" x="110" y="60"/>
-        <use href="#resistor" x="110" y="230"/>
-        <path d="M215,50 V60"/>
-        <use href="#resistor" x="215" y="60"/>
-        <path d="M215,140 V172"/>
-        <path d="M178,190 V230"/>
-        <path d="M178,198 L215,172"/>
-        <path d="M178,222 L215,248" marker-end="url(#arrow)"/>
-        <path d="M215,248 V280"/>
-        <use href="#resistor" x="215" y="280"/>
-        <path d="M110,310 V330"/>
-        <use href="#ground" x="110" y="330"/>
-        <use href="#ground" x="215" y="360"/>
-        <circle cx="200" cy="210" r="34"/>
-      </g>
-      <circle cx="215" cy="50" r="3" fill="#1f2933"/>
-
-      <g fill="#1f2933" font-size="14">
-        <text x="215" y="32" text-anchor="middle">V_CC = {{ form.vcc }} V</text>
-        <text x="62" y="104">R1</text>
-        <text x="96" y="122" text-anchor="end" class="value">{{ form.r1|resistance }}</text>
-        <text x="62" y="274">R2</text>
-        <text x="96" y="292" text-anchor="end" class="value">{{ form.r2|resistance }}</text>
-        <text x="245" y="104">R_C</text>
-        <text x="245" y="122" class="value">{{ form.rc|resistance }}</text>
-        <text x="245" y="324">R_E</text>
-        <text x="245" y="342" class="value">{{ form.re|resistance }}</text>
-        <text x="245" y="198">Q1</text>
-        <text x="245" y="216">NPN</text>
-        <text x="245" y="234">β = {{ form.beta }}</text>
-      </g>
-    </svg>
-  </section>
-
-  {% if error %}
-  <p class="error" role="alert">{{ error }}</p>
-  {% endif %}
-
   <form method="post" action="/">
-    <fieldset>
-      <legend>ค่าพารามิเตอร์ของวงจร</legend>
+    <div class="dashboard">
+      <section class="card input-card">
+        <h2 class="card-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M12 2v3M12 19v3M2 12h3M19 12h3M4.9 4.9l2.1 2.1M17 17l2.1 2.1M19.1 4.9 17 7M7 17l-2.1 2.1"/>
+          </svg>
+          Input Parameters
+        </h2>
 
-      <label>แรงดัน V_CC (V)
-        <input name="vcc" type="number" step="any" value="{{ form.vcc }}" required>
-      </label>
-      <label>ตัวต้านทาน R1 (Ω)
-        <input name="r1" type="number" step="any" value="{{ form.r1 }}" required>
-      </label>
-      <label>ตัวต้านทาน R2 (Ω)
-        <input name="r2" type="number" step="any" value="{{ form.r2 }}" required>
-      </label>
-      <label>ตัวต้านทาน R_C (Ω)
-        <input name="rc" type="number" step="any" value="{{ form.rc }}" required>
-      </label>
-      <label>ตัวต้านทาน R_E (Ω)
-        <input name="re" type="number" step="any" value="{{ form.re }}" required>
-      </label>
-      <label>อัตราขยายกระแส β
-        <input name="beta" type="number" step="any" value="{{ form.beta }}" required>
-      </label>
-      <label>แรงดัน V_BE (V)
-        <input name="vbe" type="number" step="any" value="{{ form.vbe }}" required>
-      </label>
-    </fieldset>
+        {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 
-    <button type="submit">คำนวณ</button>
+        <div class="field-row">
+          <label for="vcc">V<sub>CC</sub> <span>(Supply)</span></label>
+          <input id="vcc" name="vcc" type="number" step="any" value="{{ form.vcc }}" required>
+          <select name="vcc_unit" aria-label="VCC unit">
+            <option value="V" selected>V</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <label for="r1">R<sub>1</sub> <span>(Upper Divider)</span></label>
+          <input id="r1" name="r1" type="number" step="any" value="{{ form.r1 }}" required>
+          <select name="r1_unit" aria-label="R1 unit">
+            <option value="kΩ" {% if units.r1 == "kΩ" %}selected{% endif %}>kΩ</option>
+            <option value="Ω" {% if units.r1 == "Ω" %}selected{% endif %}>Ω</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <label for="r2">R<sub>2</sub> <span>(Lower Divider)</span></label>
+          <input id="r2" name="r2" type="number" step="any" value="{{ form.r2 }}" required>
+          <select name="r2_unit" aria-label="R2 unit">
+            <option value="kΩ" {% if units.r2 == "kΩ" %}selected{% endif %}>kΩ</option>
+            <option value="Ω" {% if units.r2 == "Ω" %}selected{% endif %}>Ω</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <label for="rc">R<sub>C</sub> <span>(Collector)</span></label>
+          <input id="rc" name="rc" type="number" step="any" value="{{ form.rc }}" required>
+          <select name="rc_unit" aria-label="RC unit">
+            <option value="kΩ" {% if units.rc == "kΩ" %}selected{% endif %}>kΩ</option>
+            <option value="Ω" {% if units.rc == "Ω" %}selected{% endif %}>Ω</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <label for="re">R<sub>E</sub> <span>(Emitter)</span></label>
+          <input id="re" name="re" type="number" step="any" value="{{ form.re }}" required>
+          <select name="re_unit" aria-label="RE unit">
+            <option value="kΩ" {% if units.re == "kΩ" %}selected{% endif %}>kΩ</option>
+            <option value="Ω" {% if units.re == "Ω" %}selected{% endif %}>Ω</option>
+          </select>
+        </div>
+
+        <div class="field-row">
+          <label for="beta">β <span>(Current Gain)</span></label>
+          <input id="beta" name="beta" type="number" step="any" value="{{ form.beta }}" required>
+          <span class="unit-static">–</span>
+        </div>
+
+        <div class="field-row">
+          <label for="vbe">V<sub>BE</sub> <span>(Base-Emitter)</span></label>
+          <input id="vbe" name="vbe" type="number" step="any" value="{{ form.vbe }}" required>
+          <select name="vbe_unit" aria-label="VBE unit">
+            <option value="V" selected>V</option>
+          </select>
+        </div>
+
+        <button class="calculate-button" type="submit">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="5" y="2" width="14" height="20" rx="2"/>
+            <path d="M8 6h8M8 11h2M12 11h2M16 11h2M8 15h2M12 15h2M16 15h2M8 19h6"/>
+          </svg>
+          Calculate DC Bias
+        </button>
+      </section>
+
+      <section class="card circuit-card">
+        <h2 class="card-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="6" cy="12" r="2"/>
+            <circle cx="18" cy="6" r="2"/>
+            <circle cx="18" cy="18" r="2"/>
+            <path d="M8 12h4l4-6M12 12l4 6"/>
+          </svg>
+          Circuit: Common-Emitter Amplifier
+        </h2>
+
+        <svg viewBox="0 0 360 400" role="img" aria-labelledby="circuit-title">
+          <title id="circuit-title">BJT common-emitter voltage divider bias circuit</title>
+          <defs>
+            <g id="resistor">
+              <path d="M0,0 V8 L8,14 L-8,24 L8,34 L-8,44 L8,54 L-8,64 L0,70 V80" fill="none"/>
+            </g>
+            <g id="ground">
+              <path d="M-14,0 H14 M-9,6 H9 M-4,12 H4" fill="none"/>
+            </g>
+            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
+                    markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <path d="M0,0 L10,5 L0,10 z" fill="#1b2a3a"/>
+            </marker>
+          </defs>
+
+          <g stroke="#1b2a3a" stroke-width="2" fill="none"
+             stroke-linecap="round" stroke-linejoin="round">
+            <path d="M110,50 H215"/>
+            <path d="M110,50 V60"/>
+            <path d="M110,140 V230"/>
+            <path d="M110,210 H178"/>
+            <use href="#resistor" x="110" y="60"/>
+            <use href="#resistor" x="110" y="230"/>
+            <path d="M215,50 V60"/>
+            <use href="#resistor" x="215" y="60"/>
+            <path d="M215,140 V172"/>
+            <path d="M178,190 V230"/>
+            <path d="M178,198 L215,172"/>
+            <path d="M178,222 L215,248" marker-end="url(#arrow)"/>
+            <path d="M215,248 V280"/>
+            <use href="#resistor" x="215" y="280"/>
+            <path d="M110,310 V330"/>
+            <use href="#ground" x="110" y="330"/>
+            <use href="#ground" x="215" y="360"/>
+            <circle cx="200" cy="210" r="34" fill="#dbeafe"/>
+          </g>
+          <circle cx="215" cy="50" r="3" fill="#1b2a3a"/>
+
+          <g fill="#1b2a3a" font-size="14">
+            <text x="215" y="32" text-anchor="middle">V_CC = {{ form.vcc }} V</text>
+            <text x="62" y="104">R1</text>
+            <text x="96" y="122" text-anchor="end" class="value">{{ form.r1|resistance(units.r1) }}</text>
+            <text x="62" y="274">R2</text>
+            <text x="96" y="292" text-anchor="end" class="value">{{ form.r2|resistance(units.r2) }}</text>
+            <text x="245" y="104">R_C</text>
+            <text x="245" y="122" class="value">{{ form.rc|resistance(units.rc) }}</text>
+            <text x="245" y="324">R_E</text>
+            <text x="245" y="342" class="value">{{ form.re|resistance(units.re) }}</text>
+            <text x="245" y="198">Q1</text>
+            <text x="245" y="216">NPN</text>
+            <text x="245" y="234">β = {{ form.beta }}</text>
+          </g>
+        </svg>
+      </section>
+
+      <section class="card results-card">
+        <h2 class="card-title">
+          <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>
+          </svg>
+          DC Bias Results
+        </h2>
+
+        {% if result %}
+        <table class="results-table">
+          <tbody>
+            <tr><th>V<sub>B</sub></th><td>{{ "%.2f"|format(result.exact.vb) }}</td><td>V</td></tr>
+            <tr><th>V<sub>E</sub></th><td>{{ "%.2f"|format(result.exact.ve) }}</td><td>V</td></tr>
+            <tr><th>V<sub>C</sub></th><td>{{ "%.2f"|format(result.exact.vc) }}</td><td>V</td></tr>
+            <tr><th>V<sub>CE</sub></th><td>{{ "%.2f"|format(result.exact.vce) }}</td><td>V</td></tr>
+            <tr><th>I<sub>B</sub></th><td>{{ "%.2f"|format(result.exact.ib * 1e6) }}</td><td>µA</td></tr>
+            <tr><th>I<sub>C</sub></th><td>{{ "%.2f"|format(result.exact.ic * 1e3) }}</td><td>mA</td></tr>
+            <tr><th>I<sub>E</sub></th><td>{{ "%.2f"|format(result.exact.ie * 1e3) }}</td><td>mA</td></tr>
+          </tbody>
+        </table>
+
+        <div class="status status--{{ result.region }}">
+          <svg class="status-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M20 6 9 17l-5-5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <div>
+            <strong>{{ result.region|capitalize }} region</strong>
+            {% if result.region == "active" %}
+            <p>V<sub>CE</sub> = {{ "%.2f"|format(result.exact.vce) }} V &gt; 0.2 V (transistor in active region)</p>
+            {% elif result.region == "cutoff" %}
+            <p>I<sub>C</sub> = 0 A (transistor is off)</p>
+            {% else %}
+            <p>V<sub>CE</sub> ≤ 0.2 V — I<sub>C,sat</sub> = {{ "%.2f"|format(result.ic_sat * 1e3) }} mA</p>
+            {% endif %}
+          </div>
+        </div>
+        {% else %}
+        <p class="empty">Enter values and press Calculate.</p>
+        {% endif %}
+      </section>
+    </div>
+
+    {% if result %}
+    <section class="card comparison-card">
+      <h2 class="card-title">Exact vs Approximate Comparison</h2>
+
+      <p class="condition">
+        <strong>βR<sub>E</sub> ≥ 10R<sub>2</sub>:</strong>
+        {% if result.approximate.ratio >= 1 %}
+        <span class="pill pill--pass">PASS</span>
+        {% else %}
+        <span class="pill pill--fail">FAIL</span>
+        {% endif %}
+        (ratio {{ "%.2f"|format(result.approximate.ratio) }})
+        {% if not result.approximate.applicable %}<span class="reason">— {{ result.approximate.reason }}</span>{% endif %}
+      </p>
+
+      <table class="comparison-table">
+        <thead>
+          <tr><th>Quantity</th><th>Exact</th><th>Approximate</th><th>Diff (%)</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>I_C (mA)</td>
+            <td>{{ "%.3f"|format(result.exact.ic * 1000) }}</td>
+            <td>{% if result.approximate.ic is not none %}{{ "%.3f"|format(result.approximate.ic * 1000) }}{% else %}N/A{% endif %}</td>
+            <td>{% if result.comparison.ic_diff_pct is not none %}{{ "%.2f"|format(result.comparison.ic_diff_pct) }}{% else %}N/A{% endif %}</td>
+          </tr>
+          <tr>
+            <td>V_CE (V)</td>
+            <td>{{ "%.3f"|format(result.exact.vce) }}</td>
+            <td>{% if result.approximate.vce is not none %}{{ "%.3f"|format(result.approximate.vce) }}{% else %}N/A{% endif %}</td>
+            <td>{% if result.comparison.vce_diff_pct is not none %}{{ "%.2f"|format(result.comparison.vce_diff_pct) }}{% else %}N/A{% endif %}</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+    {% endif %}
   </form>
-
-  {% if result %}
-  <section class="result">
-    <h2>
-      Q-point
-      <span class="badge region-{{ result.region }}">{{ result.region|capitalize }}</span>
-    </h2>
-
-    <table>
-      <caption>จุดทำงานกระแสตรง (วิธี exact)</caption>
-      <tbody>
-        <tr><th>I_B</th><td>{{ "%.3f"|format(result.exact.ib * 1000) }}</td><td>mA</td></tr>
-        <tr><th>I_C</th><td>{{ "%.3f"|format(result.exact.ic * 1000) }}</td><td>mA</td></tr>
-        <tr><th>I_E</th><td>{{ "%.3f"|format(result.exact.ie * 1000) }}</td><td>mA</td></tr>
-        <tr><th>V_BE</th><td>{{ "%.3f"|format(form.vbe|float) }}</td><td>V</td></tr>
-        <tr><th>V_B</th><td>{{ "%.3f"|format(result.exact.vb) }}</td><td>V</td></tr>
-        <tr><th>V_C</th><td>{{ "%.3f"|format(result.exact.vc) }}</td><td>V</td></tr>
-        <tr><th>V_E</th><td>{{ "%.3f"|format(result.exact.ve) }}</td><td>V</td></tr>
-        <tr><th>V_CE</th><td>{{ "%.3f"|format(result.exact.vce) }}</td><td>V</td></tr>
-      </tbody>
-    </table>
-
-    {% if result.ic_sat is not none %}
-    <p class="sat-current">
-      I_C,sat = {{ "%.3f"|format(result.ic_sat * 1000) }} mA
-    </p>
-    {% endif %}
-
-    {% if result.warnings %}
-    <ul class="warnings">
-      {% for warning in result.warnings %}
-      <li>{{ warning }}</li>
-      {% endfor %}
-    </ul>
-    {% endif %}
-  </section>
-
-  <section class="comparison">
-    <h3>เปรียบเทียบกับวิธี approximate</h3>
-    <p class="condition">
-      βR_E ≥ 10R2:
-      {% if result.approximate.ratio >= 1 %}ผ่าน{% else %}ไม่ผ่าน{% endif %}
-      (อัตราส่วน {{ "%.2f"|format(result.approximate.ratio) }})
-      {% if not result.approximate.applicable %}— {{ result.approximate.reason }}{% endif %}
-    </p>
-
-    <table>
-      <thead>
-        <tr><th>ปริมาณ</th><th>Exact</th><th>Approximate</th><th>ต่าง (%)</th></tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>I_C (mA)</td>
-          <td>{{ "%.3f"|format(result.exact.ic * 1000) }}</td>
-          <td>{% if result.approximate.ic is not none %}{{ "%.3f"|format(result.approximate.ic * 1000) }}{% else %}N/A{% endif %}</td>
-          <td>{% if result.comparison.ic_diff_pct is not none %}{{ "%.2f"|format(result.comparison.ic_diff_pct) }}{% else %}N/A{% endif %}</td>
-        </tr>
-        <tr>
-          <td>V_CE (V)</td>
-          <td>{{ "%.3f"|format(result.exact.vce) }}</td>
-          <td>{% if result.approximate.vce is not none %}{{ "%.3f"|format(result.approximate.vce) }}{% else %}N/A{% endif %}</td>
-          <td>{% if result.comparison.vce_diff_pct is not none %}{{ "%.2f"|format(result.comparison.vce_diff_pct) }}{% else %}N/A{% endif %}</td>
-        </tr>
-      </tbody>
-    </table>
-  </section>
-  {% endif %}
 </main>
 </body>
 </html>

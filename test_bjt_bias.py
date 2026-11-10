@@ -73,5 +73,39 @@ class TestExactOperatingPoint(unittest.TestCase):
         self.assertTrue(any("saturation" in warning for warning in result["warnings"]))
 
 
+class TestApproximateComparison(unittest.TestCase):
+    def test_default_case_matches_approximation_closely(self):
+        result = calculate_dc_bias(**DEFAULT)
+        approx = result["approximate"]
+        self.assertTrue(approx["applicable"])
+        self.assertEqual(approx["reason"], "")
+        self.assertAlmostEqual(approx["ratio"], 1.5, places=9)
+        self.assertAlmostEqual(approx["vb"], 2.1052631579, places=6)
+        self.assertAlmostEqual(approx["ve"], 1.4052631579, places=6)
+        self.assertAlmostEqual(approx["ic"], 0.001405263158, delta=1e-9)
+        self.assertAlmostEqual(approx["vce"], 7.503157895, places=6)
+        comparison = result["comparison"]
+        self.assertAlmostEqual(comparison["ic_diff_pct"], 6.16374269, delta=0.01)
+        self.assertAlmostEqual(comparison["vce_diff_pct"], 3.25265504, delta=0.01)
+
+    def test_condition_failure_marks_inapplicable(self):
+        args = dict(DEFAULT, re=100)
+        result = calculate_dc_bias(**args)
+        approx = result["approximate"]
+        self.assertFalse(approx["applicable"])
+        self.assertIn("10R2", approx["reason"])
+        self.assertIsNotNone(approx["ic"])
+        self.assertIsNone(result["comparison"]["ic_diff_pct"])
+        self.assertIsNone(result["comparison"]["vce_diff_pct"])
+
+    def test_cutoff_case_approximation_is_unavailable(self):
+        result = calculate_dc_bias(**dict(DEFAULT, r2=1000))
+        approx = result["approximate"]
+        self.assertFalse(approx["applicable"])
+        self.assertIn("cutoff", approx["reason"])
+        self.assertIsNone(approx["ve"])
+        self.assertIsNone(result["comparison"]["ic_diff_pct"])
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -61,6 +61,33 @@ def calculate_dc_bias(
     else:
         region = "active"
 
+    ratio = beta * re / (10 * r2)
+    approx_vb = vcc * r2 / (r1 + r2)
+    approx_ve = approx_vb - vbe
+    approx_ie = approx_ve / re
+    approx_ic = approx_ie
+    approx_vc = vcc - approx_ic * rc
+    approx_vce = approx_vc - approx_ve
+
+    if ratio < 1:
+        applicable = False
+        reason = "ไม่เข้าเงื่อนไข βR_E ≥ 10R2"
+    elif approx_ve <= 0:
+        applicable = False
+        reason = "V_E ≤ 0 (วงจรอยู่ใน cutoff) ใช้วิธี approximate ไม่ได้"
+        approx_vb = approx_ve = approx_ie = None
+        approx_ic = approx_vc = approx_vce = None
+    else:
+        applicable = True
+        reason = ""
+
+    if applicable and ic > 0:
+        ic_diff_pct = abs(approx_ic - ic) / ic * 100
+        vce_diff_pct = abs(approx_vce - vce) / abs(vce) * 100
+    else:
+        ic_diff_pct = None
+        vce_diff_pct = None
+
     return {
         "exact": {
             "vth": vth,
@@ -77,4 +104,19 @@ def calculate_dc_bias(
         "warnings": warnings,
         "ic_sat": ic_sat,
         "vce_sat": 0.2,
+        "approximate": {
+            "applicable": applicable,
+            "reason": reason,
+            "ratio": ratio,
+            "vb": approx_vb,
+            "ve": approx_ve,
+            "ie": approx_ie,
+            "ic": approx_ic,
+            "vc": approx_vc,
+            "vce": approx_vce,
+        },
+        "comparison": {
+            "ic_diff_pct": ic_diff_pct,
+            "vce_diff_pct": vce_diff_pct,
+        },
     }

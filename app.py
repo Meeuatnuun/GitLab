@@ -6,6 +6,8 @@ from bjt_bias import calculate_dc_bias
 
 FIELDS = ("vcc", "r1", "r2", "rc", "re", "beta", "vbe")
 
+RESISTANCE_FIELDS = ("r1", "r2", "rc", "re")
+
 DEFAULTS = {
     "vcc": "12",
     "r1": "47000",
@@ -16,27 +18,60 @@ DEFAULTS = {
     "vbe": "0.7",
 }
 
+BASE_UNITS = {
+    "vcc": "V",
+    "r1": "Ω",
+    "r2": "Ω",
+    "rc": "Ω",
+    "re": "Ω",
+    "beta": "–",
+    "vbe": "V",
+}
 
-def format_resistance(value: str) -> str:
-    """แปลงค่าความต้านทานเป็นข้อความ เช่น 47000 -> 47 kΩ"""
+DEFAULT_UNITS = dict(BASE_UNITS)
+
+DEFAULT_FORM = {
+    **DEFAULTS,
+    **{f"{field}_unit": unit for field, unit in DEFAULT_UNITS.items()},
+}
+
+
+def format_resistance(value: str, unit: str = "Ω") -> str:
+    """Format a resistance amount, converting kΩ input to ohms first."""
     try:
-        ohms = float(value)
+        amount = float(value)
     except (TypeError, ValueError):
         return str(value)
+    ohms = amount * 1000 if unit == "kΩ" else amount
     if ohms >= 1000:
-        return f"{ohms / 1000:g} kΩ"
+        kilo = ohms / 1000
+        if kilo < 10:
+            return f"{kilo:.1f} kΩ"
+        return f"{kilo:g} kΩ"
     return f"{ohms:g} Ω"
 
 
 def parse_form(form: Mapping[str, str]) -> dict[str, float]:
-    """แปลงค่าจากฟอร์ม HTML เป็นตัวเลขสำหรับคำนวณ"""
+    """Convert the HTML form amounts to base units for calculation."""
     values: dict[str, float] = {}
     for field in FIELDS:
         try:
-            values[field] = float(form[field])
+            amount = float(form[field])
         except (KeyError, ValueError):
-            raise ValueError("กรุณากรอกเป็นตัวเลขทั้งหมด") from None
+            raise ValueError("Please enter numbers in all fields.") from None
+        unit = form.get(f"{field}_unit", BASE_UNITS[field])
+        allowed_units = ("kΩ", "Ω") if field in RESISTANCE_FIELDS else (BASE_UNITS[field],)
+        if unit not in allowed_units:
+            raise ValueError("Please choose a valid unit.")
+        values[field] = amount * 1000 if unit == "kΩ" else amount
     return values
+
+
+def form_units(form: Mapping[str, str]) -> dict[str, str]:
+    return {
+        field: form.get(f"{field}_unit", BASE_UNITS[field])
+        for field in FIELDS
+    }
 
 
 def create_app() -> Flask:
@@ -45,19 +80,22 @@ def create_app() -> Flask:
 
     @app.get("/")
     def index():
-        return render_template("index.html", form=DEFAULTS, result=None, error=None)
+        return render_template(
+            "index.html", form=DEFAULTS, units=DEFAULT_UNITS, result=None, error=None
+        )
 
     @app.post("/")
     def calculate():
+        units = form_units(request.form)
         try:
             values = parse_form(request.form)
             result = calculate_dc_bias(**values)
         except ValueError as error:
             return render_template(
-                "index.html", form=request.form, result=None, error=str(error)
+                "index.html", form=request.form, units=units, result=None, error=str(error)
             )
         return render_template(
-            "index.html", form=request.form, result=result, error=None
+            "index.html", form=request.form, units=units, result=result, error=None
         )
 
     return app

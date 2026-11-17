@@ -20,6 +20,10 @@
   box-sizing: border-box;
 }
 
+[hidden] {
+  display: none !important;
+}
+
 body {
   margin: 0;
   background: var(--bg);
@@ -113,6 +117,54 @@ main {
   width: 20px;
   height: 20px;
   flex: 0 0 20px;
+}
+
+.mode-selector {
+  border: 0;
+  padding: 0;
+  margin: 0 0 0.9rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.mode-selector legend {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 0.35rem;
+  padding: 0;
+}
+
+.mode-option {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  font-size: 0.83rem;
+  cursor: pointer;
+}
+
+.mode-option:has(input:checked) {
+  border-color: var(--primary);
+  background: #eef6fb;
+  color: var(--primary-dark);
+  font-weight: 600;
+}
+
+.mode-option input {
+  accent-color: var(--primary);
+}
+
+.mode-chip {
+  margin-left: auto;
+  background: var(--badge-bg);
+  color: var(--badge-text);
+  border-radius: 999px;
+  padding: 0.1rem 0.55rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  white-space: nowrap;
 }
 
 .field-row {
@@ -321,6 +373,22 @@ main {
   color: var(--muted);
 }
 
+.stale-note {
+  display: none;
+  margin: 0 0 0.6rem;
+  font-size: 0.8rem;
+  color: var(--cutoff-text);
+}
+
+.results-card.is-stale .stale-note {
+  display: block;
+}
+
+.results-card.is-stale .results-table,
+.results-card.is-stale .status {
+  opacity: 0.35;
+}
+
 .error {
   margin: 0 0 0.8rem;
   padding: 0.6rem 0.75rem;
@@ -331,7 +399,7 @@ main {
   font-size: 0.88rem;
 }
 
-.circuit-card > svg {
+.circuit-diagram > svg {
   display: block;
   width: 100%;
   max-width: 380px;

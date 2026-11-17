@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Lab 02: BJT DC Bias Web App</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <script src="{{ url_for('static', filename='app.js') }}" defer></script>
 </head>
 <body>
 <main>
@@ -38,9 +39,19 @@
           Input Parameters
         </h2>
 
+        <fieldset class="mode-selector">
+          <legend>Bias Mode</legend>
+          {% for value, label in mode_labels.items() %}
+          <label class="mode-option">
+            <input type="radio" name="mode" value="{{ value }}" {% if mode == value %}checked{% endif %}>
+            <span>{{ label }}</span>
+          </label>
+          {% endfor %}
+        </fieldset>
+
         {% if error %}<p class="error" role="alert">{{ error }}</p>{% endif %}
 
-        <div class="field-row">
+        <div class="field-row" data-modes="voltage_divider fixed emitter">
           <label for="vcc">V<sub>CC</sub> <span>(Supply)</span></label>
           <input id="vcc" name="vcc" type="number" step="any" value="{{ form.vcc }}" required>
           <select name="vcc_unit" aria-label="VCC unit">
@@ -48,25 +59,34 @@
           </select>
         </div>
 
-        <div class="field-row">
+        <div class="field-row" data-modes="voltage_divider" {% if mode != "voltage_divider" %}hidden{% endif %}>
           <label for="r1">R<sub>1</sub> <span>(Upper Divider)</span></label>
-          <input id="r1" name="r1" type="number" step="any" value="{{ form.r1 }}" required>
-          <select name="r1_unit" aria-label="R1 unit">
+          <input id="r1" name="r1" type="number" step="any" value="{{ form.r1 }}" required {% if mode != "voltage_divider" %}disabled{% endif %}>
+          <select name="r1_unit" aria-label="R1 unit" {% if mode != "voltage_divider" %}disabled{% endif %}>
             <option value="kΩ" {% if units.r1 == "kΩ" %}selected{% endif %}>kΩ</option>
             <option value="Ω" {% if units.r1 == "Ω" %}selected{% endif %}>Ω</option>
           </select>
         </div>
 
-        <div class="field-row">
+        <div class="field-row" data-modes="voltage_divider" {% if mode != "voltage_divider" %}hidden{% endif %}>
           <label for="r2">R<sub>2</sub> <span>(Lower Divider)</span></label>
-          <input id="r2" name="r2" type="number" step="any" value="{{ form.r2 }}" required>
-          <select name="r2_unit" aria-label="R2 unit">
+          <input id="r2" name="r2" type="number" step="any" value="{{ form.r2 }}" required {% if mode != "voltage_divider" %}disabled{% endif %}>
+          <select name="r2_unit" aria-label="R2 unit" {% if mode != "voltage_divider" %}disabled{% endif %}>
             <option value="kΩ" {% if units.r2 == "kΩ" %}selected{% endif %}>kΩ</option>
             <option value="Ω" {% if units.r2 == "Ω" %}selected{% endif %}>Ω</option>
           </select>
         </div>
 
-        <div class="field-row">
+        <div class="field-row" data-modes="fixed emitter" {% if mode == "voltage_divider" %}hidden{% endif %}>
+          <label for="rb">R<sub>B</sub> <span>(Base Bias)</span></label>
+          <input id="rb" name="rb" type="number" step="any" value="{{ form.rb }}" required {% if mode == "voltage_divider" %}disabled{% endif %}>
+          <select name="rb_unit" aria-label="RB unit" {% if mode == "voltage_divider" %}disabled{% endif %}>
+            <option value="kΩ" {% if units.rb == "kΩ" %}selected{% endif %}>kΩ</option>
+            <option value="Ω" {% if units.rb == "Ω" %}selected{% endif %}>Ω</option>
+          </select>
+        </div>
+
+        <div class="field-row" data-modes="voltage_divider fixed emitter">
           <label for="rc">R<sub>C</sub> <span>(Collector)</span></label>
           <input id="rc" name="rc" type="number" step="any" value="{{ form.rc }}" required>
           <select name="rc_unit" aria-label="RC unit">
@@ -75,22 +95,22 @@
           </select>
         </div>
 
-        <div class="field-row">
+        <div class="field-row" data-modes="voltage_divider emitter" {% if mode == "fixed" %}hidden{% endif %}>
           <label for="re">R<sub>E</sub> <span>(Emitter)</span></label>
-          <input id="re" name="re" type="number" step="any" value="{{ form.re }}" required>
-          <select name="re_unit" aria-label="RE unit">
+          <input id="re" name="re" type="number" step="any" value="{{ form.re }}" required {% if mode == "fixed" %}disabled{% endif %}>
+          <select name="re_unit" aria-label="RE unit" {% if mode == "fixed" %}disabled{% endif %}>
             <option value="kΩ" {% if units.re == "kΩ" %}selected{% endif %}>kΩ</option>
             <option value="Ω" {% if units.re == "Ω" %}selected{% endif %}>Ω</option>
           </select>
         </div>
 
-        <div class="field-row">
+        <div class="field-row" data-modes="voltage_divider fixed emitter">
           <label for="beta">β <span>(Current Gain)</span></label>
           <input id="beta" name="beta" type="number" step="any" value="{{ form.beta }}" required>
           <span class="unit-static">–</span>
         </div>
 
-        <div class="field-row">
+        <div class="field-row" data-modes="voltage_divider fixed emitter">
           <label for="vbe">V<sub>BE</sub> <span>(Base-Emitter)</span></label>
           <input id="vbe" name="vbe" type="number" step="any" value="{{ form.vbe }}" required>
           <select name="vbe_unit" aria-label="VBE unit">
@@ -118,79 +138,207 @@
           Circuit: Common-Emitter Amplifier
         </h2>
 
-        <svg viewBox="0 0 360 400" role="img" aria-labelledby="circuit-title">
-          <title id="circuit-title">BJT common-emitter voltage divider bias circuit</title>
-          <defs>
-            <g id="resistor">
-              <path d="M0,0 V8 L8,14 L-8,24 L8,34 L-8,44 L8,54 L-8,64 L0,70 V80" fill="none"/>
-            </g>
-            <g id="ground">
-              <path d="M-14,0 H14 M-9,6 H9 M-4,12 H4" fill="none"/>
-            </g>
-            <marker id="arrow" viewBox="0 0 10 10" refX="9" refY="5"
-                    markerWidth="6" markerHeight="6" orient="auto-start-reverse">
-              <path d="M0,0 L10,5 L0,10 z" fill="#1b2a3a"/>
-            </marker>
-          </defs>
+        <div class="circuit-diagram" data-mode="voltage_divider" {% if mode != "voltage_divider" %}hidden{% endif %}>
+          <svg viewBox="0 0 360 400" role="img" aria-label="Voltage divider bias BJT circuit">
+            <title>Voltage divider bias BJT circuit</title>
+            <defs>
+              <g id="resistor-vd">
+                <path d="M0,0 V8 L8,14 L-8,24 L8,34 L-8,44 L8,54 L-8,64 L0,70 V80" fill="none"/>
+              </g>
+              <g id="ground-vd">
+                <path d="M-14,0 H14 M-9,6 H9 M-4,12 H4" fill="none"/>
+              </g>
+              <marker id="arrow-vd" viewBox="0 0 10 10" refX="9" refY="5"
+                      markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#1b2a3a"/>
+              </marker>
+            </defs>
 
-          <g stroke="#1b2a3a" stroke-width="2" fill="none"
-             stroke-linecap="round" stroke-linejoin="round">
-            <path d="M110,50 H215"/>
-            <path d="M110,50 V60"/>
-            <path d="M110,140 V230"/>
-            <path d="M110,210 H178"/>
-            <use href="#resistor" x="110" y="60"/>
-            <use href="#resistor" x="110" y="230"/>
-            <path d="M215,50 V60"/>
-            <use href="#resistor" x="215" y="60"/>
-            <path d="M215,140 V172"/>
-            <path d="M178,190 V230"/>
-            <path d="M178,198 L215,172"/>
-            <path d="M178,222 L215,248" marker-end="url(#arrow)"/>
-            <path d="M215,248 V280"/>
-            <use href="#resistor" x="215" y="280"/>
-            <path d="M110,310 V330"/>
-            <use href="#ground" x="110" y="330"/>
-            <use href="#ground" x="215" y="360"/>
-            <circle cx="200" cy="210" r="34" fill="#dbeafe"/>
-          </g>
-          <circle cx="215" cy="50" r="3" fill="#1b2a3a"/>
+            <circle cx="205" cy="200" r="34" fill="#dbeafe" stroke="#1b2a3a" stroke-width="2"/>
 
-          <g fill="#1b2a3a" font-size="14">
-            <text x="215" y="32" text-anchor="middle">V_CC = {{ form.vcc }} V</text>
-            <text x="62" y="104">R1</text>
-            <text x="96" y="122" text-anchor="end" class="value">{{ form.r1|resistance(units.r1) }}</text>
-            <text x="62" y="274">R2</text>
-            <text x="96" y="292" text-anchor="end" class="value">{{ form.r2|resistance(units.r2) }}</text>
-            <text x="245" y="104">R_C</text>
-            <text x="245" y="122" class="value">{{ form.rc|resistance(units.rc) }}</text>
-            <text x="245" y="324">R_E</text>
-            <text x="245" y="342" class="value">{{ form.re|resistance(units.re) }}</text>
-            <text x="245" y="198">Q1</text>
-            <text x="245" y="216">NPN</text>
-            <text x="245" y="234">β = {{ form.beta }}</text>
-          </g>
-        </svg>
+            <g stroke="#1b2a3a" stroke-width="2" fill="none"
+               stroke-linecap="round" stroke-linejoin="round">
+              <path d="M110,60 H215"/>
+              <path d="M162,48 V60"/>
+              <path d="M110,60 V80"/>
+              <path d="M215,60 V80"/>
+
+              <use href="#resistor-vd" x="110" y="80"/>
+              <path d="M110,160 V220"/>
+              <use href="#resistor-vd" x="110" y="220"/>
+              <path d="M110,300 V340"/>
+              <use href="#ground-vd" x="110" y="340"/>
+
+              <path d="M110,200 H185"/>
+
+              <use href="#resistor-vd" x="215" y="80"/>
+              <path d="M215,160 V166"/>
+              <path d="M215,234 V250"/>
+              <use href="#resistor-vd" x="215" y="250"/>
+              <path d="M215,330 V340"/>
+              <use href="#ground-vd" x="215" y="340"/>
+
+              <path d="M185,176 V224" stroke-width="3.5"/>
+              <path d="M185,188 L215,166"/>
+              <path d="M185,212 L215,234" marker-end="url(#arrow-vd)"/>
+            </g>
+
+            <g fill="#1b2a3a">
+              <circle cx="162" cy="60" r="3"/>
+              <circle cx="110" cy="200" r="3"/>
+            </g>
+
+            <g fill="#1b2a3a" font-size="14">
+              <text x="162" y="36" text-anchor="middle">V<tspan dy="4" font-size="10">CC</tspan><tspan dy="-4"> = {{ form.vcc }} V</tspan></text>
+              <text x="90" y="116" text-anchor="end">R<tspan dy="4" font-size="10">1</tspan></text>
+              <text x="90" y="134" text-anchor="end" class="value">{{ form.r1|resistance(units.r1) }}</text>
+              <text x="90" y="256" text-anchor="end">R<tspan dy="4" font-size="10">2</tspan></text>
+              <text x="90" y="274" text-anchor="end" class="value">{{ form.r2|resistance(units.r2) }}</text>
+              <text x="238" y="116">R<tspan dy="4" font-size="10">C</tspan></text>
+              <text x="238" y="134" class="value">{{ form.rc|resistance(units.rc) }}</text>
+              <text x="238" y="286">R<tspan dy="4" font-size="10">E</tspan></text>
+              <text x="238" y="304" class="value">{{ form.re|resistance(units.re) }}</text>
+              <text x="250" y="188">Q<tspan dy="4" font-size="10">1</tspan></text>
+              <text x="250" y="206">NPN</text>
+              <text x="250" y="224">β = {{ form.beta }}</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="circuit-diagram" data-mode="fixed" {% if mode != "fixed" %}hidden{% endif %}>
+          <svg viewBox="0 0 360 400" role="img" aria-label="Fixed bias BJT circuit">
+            <title>Fixed bias BJT circuit</title>
+            <defs>
+              <g id="resistor-fi">
+                <path d="M0,0 V8 L8,14 L-8,24 L8,34 L-8,44 L8,54 L-8,64 L0,70 V80" fill="none"/>
+              </g>
+              <g id="ground-fi">
+                <path d="M-14,0 H14 M-9,6 H9 M-4,12 H4" fill="none"/>
+              </g>
+              <marker id="arrow-fi" viewBox="0 0 10 10" refX="9" refY="5"
+                      markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#1b2a3a"/>
+              </marker>
+            </defs>
+
+            <circle cx="205" cy="200" r="34" fill="#dbeafe" stroke="#1b2a3a" stroke-width="2"/>
+
+            <g stroke="#1b2a3a" stroke-width="2" fill="none"
+               stroke-linecap="round" stroke-linejoin="round">
+              <path d="M110,60 H215"/>
+              <path d="M162,48 V60"/>
+              <path d="M110,60 V80"/>
+              <path d="M215,60 V80"/>
+
+              <use href="#resistor-fi" x="110" y="80"/>
+              <path d="M110,160 V200 H185"/>
+
+              <use href="#resistor-fi" x="215" y="80"/>
+              <path d="M215,160 V166"/>
+
+              <path d="M215,234 V340"/>
+              <use href="#ground-fi" x="215" y="340"/>
+
+              <path d="M185,176 V224" stroke-width="3.5"/>
+              <path d="M185,188 L215,166"/>
+              <path d="M185,212 L215,234" marker-end="url(#arrow-fi)"/>
+            </g>
+
+            <circle cx="162" cy="60" r="3" fill="#1b2a3a"/>
+
+            <g fill="#1b2a3a" font-size="14">
+              <text x="162" y="36" text-anchor="middle">V<tspan dy="4" font-size="10">CC</tspan><tspan dy="-4"> = {{ form.vcc }} V</tspan></text>
+              <text x="90" y="116" text-anchor="end">R<tspan dy="4" font-size="10">B</tspan></text>
+              <text x="90" y="134" text-anchor="end" class="value">{{ form.rb|resistance(units.rb) }}</text>
+              <text x="238" y="116">R<tspan dy="4" font-size="10">C</tspan></text>
+              <text x="238" y="134" class="value">{{ form.rc|resistance(units.rc) }}</text>
+              <text x="250" y="188">Q<tspan dy="4" font-size="10">1</tspan></text>
+              <text x="250" y="206">NPN</text>
+              <text x="250" y="224">β = {{ form.beta }}</text>
+            </g>
+          </svg>
+        </div>
+
+        <div class="circuit-diagram" data-mode="emitter" {% if mode != "emitter" %}hidden{% endif %}>
+          <svg viewBox="0 0 360 400" role="img" aria-label="Emitter bias BJT circuit">
+            <title>Emitter bias BJT circuit</title>
+            <defs>
+              <g id="resistor-em">
+                <path d="M0,0 V8 L8,14 L-8,24 L8,34 L-8,44 L8,54 L-8,64 L0,70 V80" fill="none"/>
+              </g>
+              <g id="ground-em">
+                <path d="M-14,0 H14 M-9,6 H9 M-4,12 H4" fill="none"/>
+              </g>
+              <marker id="arrow-em" viewBox="0 0 10 10" refX="9" refY="5"
+                      markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+                <path d="M0,0 L10,5 L0,10 z" fill="#1b2a3a"/>
+              </marker>
+            </defs>
+
+            <circle cx="205" cy="200" r="34" fill="#dbeafe" stroke="#1b2a3a" stroke-width="2"/>
+
+            <g stroke="#1b2a3a" stroke-width="2" fill="none"
+               stroke-linecap="round" stroke-linejoin="round">
+              <path d="M110,60 H215"/>
+              <path d="M162,48 V60"/>
+              <path d="M110,60 V80"/>
+              <path d="M215,60 V80"/>
+
+              <use href="#resistor-em" x="110" y="80"/>
+              <path d="M110,160 V200 H185"/>
+
+              <use href="#resistor-em" x="215" y="80"/>
+              <path d="M215,160 V166"/>
+
+              <path d="M215,234 V250"/>
+              <use href="#resistor-em" x="215" y="250"/>
+              <path d="M215,330 V340"/>
+              <use href="#ground-em" x="215" y="340"/>
+
+              <path d="M185,176 V224" stroke-width="3.5"/>
+              <path d="M185,188 L215,166"/>
+              <path d="M185,212 L215,234" marker-end="url(#arrow-em)"/>
+            </g>
+
+            <circle cx="162" cy="60" r="3" fill="#1b2a3a"/>
+
+            <g fill="#1b2a3a" font-size="14">
+              <text x="162" y="36" text-anchor="middle">V<tspan dy="4" font-size="10">CC</tspan><tspan dy="-4"> = {{ form.vcc }} V</tspan></text>
+              <text x="90" y="116" text-anchor="end">R<tspan dy="4" font-size="10">B</tspan></text>
+              <text x="90" y="134" text-anchor="end" class="value">{{ form.rb|resistance(units.rb) }}</text>
+              <text x="238" y="116">R<tspan dy="4" font-size="10">C</tspan></text>
+              <text x="238" y="134" class="value">{{ form.rc|resistance(units.rc) }}</text>
+              <text x="238" y="286">R<tspan dy="4" font-size="10">E</tspan></text>
+              <text x="238" y="304" class="value">{{ form.re|resistance(units.re) }}</text>
+              <text x="250" y="188">Q<tspan dy="4" font-size="10">1</tspan></text>
+              <text x="250" y="206">NPN</text>
+              <text x="250" y="224">β = {{ form.beta }}</text>
+            </g>
+          </svg>
+        </div>
       </section>
 
-      <section class="card results-card">
+      <section class="card results-card" data-mode="{{ result.mode if result else mode }}">
         <h2 class="card-title">
           <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>
           </svg>
           DC Bias Results
+          {% if result %}<span class="mode-chip">{{ mode_labels[result.mode] }}</span>{% endif %}
         </h2>
+
+        <p class="stale-note">Mode changed — press Calculate DC Bias to update these results.</p>
 
         {% if result %}
         <table class="results-table">
           <tbody>
-            <tr><th>V<sub>B</sub></th><td>{{ "%.2f"|format(result.exact.vb) }}</td><td>V</td></tr>
-            <tr><th>V<sub>E</sub></th><td>{{ "%.2f"|format(result.exact.ve) }}</td><td>V</td></tr>
-            <tr><th>V<sub>C</sub></th><td>{{ "%.2f"|format(result.exact.vc) }}</td><td>V</td></tr>
-            <tr><th>V<sub>CE</sub></th><td>{{ "%.2f"|format(result.exact.vce) }}</td><td>V</td></tr>
-            <tr><th>I<sub>B</sub></th><td>{{ "%.2f"|format(result.exact.ib * 1e6) }}</td><td>µA</td></tr>
-            <tr><th>I<sub>C</sub></th><td>{{ "%.2f"|format(result.exact.ic * 1e3) }}</td><td>mA</td></tr>
-            <tr><th>I<sub>E</sub></th><td>{{ "%.2f"|format(result.exact.ie * 1e3) }}</td><td>mA</td></tr>
+            <tr><th>V<sub>B</sub></th><td>{{ "%.2f"|format(result.vb_v) }}</td><td>V</td></tr>
+            <tr><th>V<sub>E</sub></th><td>{{ "%.2f"|format(result.ve_v) }}</td><td>V</td></tr>
+            <tr><th>V<sub>C</sub></th><td>{{ "%.2f"|format(result.vc_v) }}</td><td>V</td></tr>
+            <tr><th>V<sub>CE</sub></th><td>{{ "%.2f"|format(result.vce_v) }}</td><td>V</td></tr>
+            <tr><th>I<sub>B</sub></th><td>{{ "%.2f"|format(result.ib_ua) }}</td><td>µA</td></tr>
+            <tr><th>I<sub>C</sub></th><td>{{ "%.2f"|format(result.ic_ma) }}</td><td>mA</td></tr>
+            <tr><th>I<sub>E</sub></th><td>{{ "%.2f"|format(result.ie_ma) }}</td><td>mA</td></tr>
           </tbody>
         </table>
 
@@ -201,15 +349,15 @@
           <div>
             <strong>{{ result.region|capitalize }} region</strong>
             {% if result.region == "active" %}
-            <p>V<sub>CE</sub> = {{ "%.2f"|format(result.exact.vce) }} V &gt; 0.2 V (transistor in active region)</p>
+            <p>V<sub>CE</sub> = {{ "%.2f"|format(result.vce_v) }} V &gt; 0.2 V (transistor in active region)</p>
             {% elif result.region == "cutoff" %}
             <p>I<sub>C</sub> = 0 A (transistor is off)</p>
             {% else %}
-            <p>V<sub>CE</sub> ≤ 0.2 V — I<sub>C,sat</sub> = {{ "%.2f"|format(result.ic_sat * 1e3) }} mA</p>
+            <p>V<sub>CE</sub> ≤ 0.2 V — I<sub>C,sat</sub> = {{ "%.2f"|format(result.ic_sat_ma) }} mA</p>
             {% endif %}
-            {% for warning in result.warnings %}
-            <p class="warning">{{ warning }}</p>
-            {% endfor %}
+            {% if result.warning %}
+            <p class="warning">{{ result.warning }}</p>
+            {% endif %}
           </div>
         </div>
         {% else %}
@@ -218,7 +366,7 @@
       </section>
     </div>
 
-    {% if result %}
+    {% if result and result.approximate %}
     <section class="card comparison-card">
       <h2 class="card-title">Exact vs Approximate Comparison</h2>
 
@@ -240,14 +388,14 @@
         <tbody>
           <tr>
             <td>I_C (mA)</td>
-            <td>{{ "%.3f"|format(result.exact.ic * 1000) }}</td>
-            <td>{% if result.approximate.ic is not none %}{{ "%.3f"|format(result.approximate.ic * 1000) }}{% else %}N/A{% endif %}</td>
+            <td>{{ "%.3f"|format(result.ic_ma) }}</td>
+            <td>{% if result.approximate.ic_ma is not none %}{{ "%.3f"|format(result.approximate.ic_ma) }}{% else %}N/A{% endif %}</td>
             <td>{% if result.comparison.ic_diff_pct is not none %}{{ "%.2f"|format(result.comparison.ic_diff_pct) }}{% else %}N/A{% endif %}</td>
           </tr>
           <tr>
             <td>V_CE (V)</td>
-            <td>{{ "%.3f"|format(result.exact.vce) }}</td>
-            <td>{% if result.approximate.vce is not none %}{{ "%.3f"|format(result.approximate.vce) }}{% else %}N/A{% endif %}</td>
+            <td>{{ "%.3f"|format(result.vce_v) }}</td>
+            <td>{% if result.approximate.vce_v is not none %}{{ "%.3f"|format(result.approximate.vce_v) }}{% else %}N/A{% endif %}</td>
             <td>{% if result.comparison.vce_diff_pct is not none %}{{ "%.2f"|format(result.comparison.vce_diff_pct) }}{% else %}N/A{% endif %}</td>
           </tr>
         </tbody>
